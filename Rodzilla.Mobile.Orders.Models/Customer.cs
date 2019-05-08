@@ -13,6 +13,7 @@ namespace Rodzilla.Mobile.Orders.Models
         public string Email { get; set; }
         public string PhoneNumber => Id;
         public bool IsNew { get; set; }
+        public int PointsBalance { get; set; }
 
         public Customer()
         {
