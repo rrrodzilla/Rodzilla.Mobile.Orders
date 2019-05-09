@@ -13,7 +13,8 @@ namespace Rodzilla.Mobile.Orders.Models
         public string CustomerFirstName { get; set; }
         public string CustomerStripeId { get; set; }
         public long Price { get; set; }
-        public string DisplayPrice => $"{((decimal) QuotedPrice / 100):C}";
+        public string DisplayPrice => $"{((decimal)QuotedPrice / 100):C}";
+        public string DisplayAppFee => $"{((decimal)AppFee / 100):C}";
         public long AppFee => (long) (Price * .15);
         public long QuotedPrice => Price + AppFee;
         public int EstimatedMinutes { get; set; }
@@ -22,6 +23,9 @@ namespace Rodzilla.Mobile.Orders.Models
 
         public DateTime StartTime { get; set; }
         public DateTime FinishTime { get; set; }
+
+        public string TransactionId { get; set; }
+        public string ReceiptUrl { get; set; }
 
         public int? MinutesToComplete => (FinishTime - StartTime).Minutes;
 

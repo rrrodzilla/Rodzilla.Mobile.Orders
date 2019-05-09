@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.539
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodzilla.Mobile.Orders", "Rodzilla.Mobile.Orders\Rodzilla.Mobile.Orders.csproj", "{7C02910F-8B75-4E89-BADC-C279E9D1949B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rodzilla.Mobile.Orders", "Rodzilla.Mobile.Orders\Rodzilla.Mobile.Orders.csproj", "{7C02910F-8B75-4E89-BADC-C279E9D1949B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodzilla.Mobile.Orders.Models", "Rodzilla.Mobile.Orders.Models\Rodzilla.Mobile.Orders.Models.csproj", "{BEDF1798-536B-4E33-8D53-0B57E4E55FC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rodzilla.Mobile.Orders.Models", "Rodzilla.Mobile.Orders.Models\Rodzilla.Mobile.Orders.Models.csproj", "{BEDF1798-536B-4E33-8D53-0B57E4E55FC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rodzilla.Mobile.Orders.Models.Tests", "Rodzilla.Mobile.Orders.Models.Tests\Rodzilla.Mobile.Orders.Models.Tests.csproj", "{D78FA51D-FFA7-4BB4-9682-B6441F248402}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rodzilla.Mobile.Orders.Models.Tests", "Rodzilla.Mobile.Orders.Models.Tests\Rodzilla.Mobile.Orders.Models.Tests.csproj", "{D78FA51D-FFA7-4BB4-9682-B6441F248402}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

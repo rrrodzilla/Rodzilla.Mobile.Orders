@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -10,8 +11,8 @@ namespace Rodzilla.Mobile.Orders
     public static class PayOrder
     {
         [FunctionName("PayOrder")]
-        [return: Queue("get-customer", Connection = "AzureWebJobsStorage")]
-        public static void Run([QueueTrigger("pay-order-requests", Connection = "AzureWebJobsStorage")]Order payRequestOrder, 
+        [return: Queue("obtain-new-payment-method", Connection = "AzureWebJobsStorage")]
+        public static async Task<Order> Run([QueueTrigger("pay-order-requests", Connection = "AzureWebJobsStorage")]Order payRequestOrder, 
             ILogger log,
             [CosmosDB(
                 databaseName: "MobileOrders",
@@ -30,18 +31,32 @@ namespace Rodzilla.Mobile.Orders
                 CustomerId = customer.StripeId,
                 Type = "card"
             };
-            var paymentmethods = service.List(options);
+            var paymentMethods = service.List(options);
 
-            if (paymentmethods.Data.Count == 0)
+            if (paymentMethods.Data.Count == 0)
             {
                 //we need to return a message to a queue to go get a payment method for this user
                 order.OrderStatus = "payment-method-needed";
+                return order;
             }
 
+            var chargeOptions = new ChargeCreateOptions
+            {
+                Amount = order.QuotedPrice,
+                Currency = "usd",
+                Description = $"Jibe Espresso Bar - Mobile Order including {order.DisplayAppFee} platform fee",
+                CustomerId = order.CustomerStripeId
+            };
+            var chargeService = new ChargeService();
+            var charge = await chargeService.CreateAsync(chargeOptions);
+
+            order.TransactionId = charge.Id;
+            order.ReceiptUrl = charge.ReceiptUrl;
             order.OrderStatus = "ready-for-fulfillment";
 
             log.LogInformation("\n\n\n************ Updating Points Balance *************\n\n\n");
             customer.PointsBalance += order.PointsValue;
+            return null;
         }
     }
 }

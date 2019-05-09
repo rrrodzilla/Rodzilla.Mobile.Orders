@@ -32,12 +32,24 @@ namespace Rodzilla.Mobile.Orders
                         case "estimate-accepted":
                             log.LogInformation($"\n\n\n************************* ORDER ESTIMATE ACCEPTED *********************\n\n\n");
                             break;
-                            
+
                         case "order-fulfilled":
                             log.LogInformation(
                                 $"\n\n\n********************** ORDER FINISHED AT {order.FinishTime} ********************\n{order.CustomerFirstName}, your order is ready for pickup!\nSkip the line and give your name at our counter.  \nIt took {order.MinutesToComplete} minutes to prepare and you earned {order.PointsValue} reward points.\n******************************************\n\n\n");
                             TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
                             message = new JObject(new JProperty("order", JObject.FromObject(order)), new JProperty("action", "order-fulfilled"));
+
+                            await ExecutionResource.CreateAsync(
+                                to: new Twilio.Types.PhoneNumber(order.CustomerId),
+                                from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
+                                pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
+                                parameters: message
+                            );
+                            break;
+
+                        case "payment-method-needed":
+                            TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
+                            message = new JObject(new JProperty("order", JObject.FromObject(order)), new JProperty("action", "payment-method-needed"));
 
                             await ExecutionResource.CreateAsync(
                                 to: new Twilio.Types.PhoneNumber(order.CustomerId),
@@ -63,6 +75,15 @@ namespace Rodzilla.Mobile.Orders
 
                         case "ready-for-fulfillment":
                             log.LogInformation($"\n\n\n*********** ORDER READY TO BE FULFILLED ***************\nOrder Id: {order.Id} for Customer Id: {order.CustomerId} is ready to be made!\n******************************************\n\n\n");
+                            TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
+                            message = new JObject(new JProperty("order", JObject.FromObject(order)), new JProperty("action", "order-paid"));
+
+                            await ExecutionResource.CreateAsync(
+                                to: new Twilio.Types.PhoneNumber(order.CustomerId),
+                                from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
+                                pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
+                                parameters: message
+                            );
                             break;
                         case "estimated":
                             log.LogInformation($"\n\n\n************************ ESTIMATE ALERT ***************************\nThank you for your order, {order.CustomerFirstName}.\nWe look forward to serving you.\nWe can have your order ready in about {order.EstimatedMinutes} minutes.\nThe total price including taxes and application fees is {((decimal)order.QuotedPrice / 100):C}.\nWould you like to place your order now?\n***************************************************\n\n\n");
