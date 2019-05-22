@@ -16,12 +16,12 @@ namespace Rodzilla.Mobile.Orders
         {
             TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
             var message = new JObject(new JProperty("customer", JObject.FromObject(customer)), new JProperty("action", "begin-order"));
-            //await ExecutionResource.CreateAsync(
-            //        to: new Twilio.Types.PhoneNumber(customer.PhoneNumber),
-            //        from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
-            //        pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
-            //        parameters: message
-            //    );
+            await ExecutionResource.CreateAsync(
+                    to: new Twilio.Types.PhoneNumber(customer.PhoneNumber),
+                    from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
+                    pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
+                    parameters: message
+                );
         }
     }
 }

@@ -21,8 +21,11 @@ namespace Rodzilla.Mobile.Orders.Models
         public int PointsValue => (int) (QuotedPrice / 100)*2;
         public int PointsPrice { get; set; }
 
+        public int PostPointsBalance { get; set; }
+
         public DateTime StartTime { get; set; }
         public DateTime FinishTime { get; set; }
+        public DateTime TransactionTime { get; set; }
 
         public string TransactionId { get; set; }
         public string ReceiptUrl { get; set; }

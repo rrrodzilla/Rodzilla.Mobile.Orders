@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Rodzilla.Mobile.Orders.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json.Linq;
 using Twilio;
 using Twilio.Rest.Studio.V1.Flow;
@@ -18,7 +19,10 @@ namespace Rodzilla.Mobile.Orders
             databaseName: "MobileOrders",
             collectionName: "orders",
             ConnectionStringSetting = "DbConnection",
-            LeaseCollectionName = "leases-notify-order-started", CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Document> input, ILogger log)
+            LeaseCollectionName = "leases-notify-order-started", CreateLeaseCollectionIfNotExists = true)]IReadOnlyList<Document> input, ILogger log,
+            [SignalR(HubName = "orders")]IAsyncCollector<SignalRMessage> signalRMessages
+            )
+
         {
             if (input != null && input.Count > 0)
             {
@@ -47,18 +51,6 @@ namespace Rodzilla.Mobile.Orders
                             );
                             break;
 
-                        case "payment-method-needed":
-                            TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
-                            message = new JObject(new JProperty("order", JObject.FromObject(order)), new JProperty("action", "payment-method-needed"));
-
-                            await ExecutionResource.CreateAsync(
-                                to: new Twilio.Types.PhoneNumber(order.CustomerId),
-                                from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
-                                pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
-                                parameters: message
-                            );
-                            break;
-
                         case "order-started":
                             log.LogInformation(
                                 $"\n\n\n********************** ORDER STARTED AT {order.StartTime} ********************\n{order.CustomerFirstName}, we've started your order at Jibe Espresso Bar.  We'll text you when its ready for pickup!\n******************************************\n\n\n");
@@ -78,12 +70,18 @@ namespace Rodzilla.Mobile.Orders
                             TwilioClient.Init(Environment.GetEnvironmentVariable("Twilio_Account_Sid"), Environment.GetEnvironmentVariable("Twilio_Auth_Token"));
                             message = new JObject(new JProperty("order", JObject.FromObject(order)), new JProperty("action", "order-paid"));
 
-                            await ExecutionResource.CreateAsync(
-                                to: new Twilio.Types.PhoneNumber(order.CustomerId),
-                                from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
-                                pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
-                                parameters: message
-                            );
+                            //await ExecutionResource.CreateAsync(
+                            //    to: new Twilio.Types.PhoneNumber(order.CustomerId),
+                            //    from: new Twilio.Types.PhoneNumber(Environment.GetEnvironmentVariable("Twilio_Phone_Number")),
+                            //    pathFlowSid: Environment.GetEnvironmentVariable("Twilio_Flow_Id"),
+                            //    parameters: message
+                            //);
+                            await signalRMessages.AddAsync(
+                                new SignalRMessage
+                                {
+                                    Target = "updateStatus",
+                                    Arguments = new object[] { order }
+                                });
                             break;
                         case "estimated":
                             log.LogInformation($"\n\n\n************************ ESTIMATE ALERT ***************************\nThank you for your order, {order.CustomerFirstName}.\nWe look forward to serving you.\nWe can have your order ready in about {order.EstimatedMinutes} minutes.\nThe total price including taxes and application fees is {((decimal)order.QuotedPrice / 100):C}.\nWould you like to place your order now?\n***************************************************\n\n\n");

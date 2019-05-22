@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Rodzilla.Mobile.Orders.Models;
 using Stripe;
@@ -16,7 +15,10 @@ namespace Rodzilla.Mobile.Orders
         public static async Task Run([QueueTrigger("receive-new-payment-token", Connection = "AzureWebJobsStorage")]OrderTokenIdentifier orderTokenIdentifier, ILogger log,
             [CosmosDB(
                 databaseName: "MobileOrders",
-                collectionName: "orders", ConnectionStringSetting = "DBConnection", Id="{OrderId}", PartitionKey = "{CustomerId}")]Order order)
+                collectionName: "orders", ConnectionStringSetting = "DBConnection", Id="{OrderId}", PartitionKey = "{CustomerId}")]Order order,
+            [CosmosDB(
+                databaseName: "MobileOrders",
+                collectionName: "customers", ConnectionStringSetting = "DBConnection", Id="{CustomerId}", PartitionKey = "{CustomerStripeId}")]Customer customer)
         {
             StripeConfiguration.SetApiKey(Environment.GetEnvironmentVariable("StripeKey"));
             var options = new CustomerUpdateOptions
@@ -25,8 +27,10 @@ namespace Rodzilla.Mobile.Orders
             };
 
             var service = new CustomerService();
-            await service.UpdateAsync(orderTokenIdentifier.CustomerStripeId, options);
-
+            var stripeCustomer = await service.UpdateAsync(orderTokenIdentifier.CustomerStripeId, options);
+            //let's cache this source info locally
+            var card = ((Card) (stripeCustomer.Sources.Data[0]));
+            customer.PaymentSource = new PaymentSource() { Brand = card.Brand, Last4 = card.Last4, ExpMonth = card.ExpMonth, ExpYear = card.ExpYear, Id = card.Id};
             order.OrderStatus = "estimate-accepted";        
         }
     }

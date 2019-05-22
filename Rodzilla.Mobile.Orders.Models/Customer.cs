@@ -15,6 +15,8 @@ namespace Rodzilla.Mobile.Orders.Models
         public bool IsNew { get; set; }
         public int PointsBalance { get; set; }
 
+        public PaymentSource PaymentSource { get; set; }
+
         public Customer()
         {
             IsNew = true;
