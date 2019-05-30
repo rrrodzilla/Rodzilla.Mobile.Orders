@@ -27,7 +27,7 @@ namespace Rodzilla.Mobile.Orders.Models.Tests
         public void TestQuestion()
         {
             Assert.IsNotNull(_order.Id);
-            OrderManager.Ask("Do you want room for cream in your americanos?", ref _order);
+            //OrderManager.Ask("Do you want room for cream in your americanos?", ref _order);
 
             Assert.IsTrue(_order.Details.Count > 0);
             OrderManager.Reply("Yes please", ref _order);
@@ -36,7 +36,7 @@ namespace Rodzilla.Mobile.Orders.Models.Tests
 
             OrderManager.EstimateOrder(2000, 10, ref _order);
             Assert.IsTrue(_order.Price > 0);
-            Assert.AreEqual("Roland", _order.CustomerFirstName);
+            Assert.AreEqual("Roland", _order.Customer.FirstName);
             Assert.AreEqual(46, _order.PointsValue);
         }
     }

@@ -16,18 +16,26 @@ namespace Rodzilla.Mobile.Orders
             ILogger log,
             [CosmosDB(
                 databaseName: "MobileOrders",
-                collectionName: "orders", ConnectionStringSetting = "DBConnection", Id="{Id}", PartitionKey = "{CustomerId}")]Order order,
+                collectionName: "orders", ConnectionStringSetting = "DBConnection", Id="{Id}", PartitionKey = "{Customer.Id}")]Order order,
             [CosmosDB(
                 databaseName: "MobileOrders",
-                collectionName: "customers", ConnectionStringSetting = "DBConnection", Id="{CustomerId}", PartitionKey = "{CustomerStripeId}")]Customer customer,
+                collectionName: "customers", ConnectionStringSetting = "DBConnection", Id="{Customer.Id}", PartitionKey = "{Customer.StripeId}")]Customer customer,
             [Queue("mo-send-receipt", Connection = "AzureWebJobsStorage")]IAsyncCollector<Order> receipts, 
             [Queue("mo-payment-method-url", Connection = "AzureWebJobsStorage")]IAsyncCollector<Order> paymentMethod)
         {
             StripeConfiguration.SetApiKey(Environment.GetEnvironmentVariable("StripeKey"));
             log.LogInformation("\n\n\n************ PAYING ORDER WITH STRIPE *************\n\n\n");
             //first we want to check if this order has already been paid
-            if (order == null || order.OrderStatus == "order-fulfilled") return null;
-            if (customer?.StripeId == null) return null;
+            if (order == null || order.OrderStatus == "order-fulfilled")
+            {
+                log.LogInformation("Order has already been fulfilled");
+                return null;
+            }
+            if (customer?.StripeId == null)
+            {
+                log.LogInformation("Customer.StripeId didn't exist");
+                return null;
+            }
 
             //here we want to know if they have a payment method
             var service = new PaymentMethodService();
@@ -54,7 +62,7 @@ namespace Rodzilla.Mobile.Orders
                 Amount = order.QuotedPrice,
                 Currency = "usd",
                 Description = $"Jibe Espresso Bar\n{order.OriginalOrder.Message}\nIncludes {order.DisplayAppFee} mobile order convenience fee",
-                CustomerId = order.CustomerStripeId
+                CustomerId = order.Customer.StripeId
             };
             var chargeService = new ChargeService();
             var charge = await chargeService.CreateAsync(chargeOptions);
@@ -67,7 +75,7 @@ namespace Rodzilla.Mobile.Orders
 
             log.LogInformation("\n\n\n************ Updating Points Balance *************\n\n\n");
             customer.PointsBalance += order.PointsValue;
-            order.PostPointsBalance = customer.PointsBalance;
+            order.Customer = customer;
             await receipts.AddAsync(order);
             return null;
         }

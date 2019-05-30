@@ -1,19 +1,21 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Rodzilla.Mobile.Orders.Models
 {
     public static class OrderManager
     {
-        public static void Ask(string question, ref Order order)
+        public static void Ask(OrderQuestion question, ref Order order)
         {
-            var newQuestion = new OrderQuestion() { Message = question, Sent = DateTime.Now };
-            order.Details.Add(newQuestion);
+            //var newQuestion = new OrderQuestion() { Message = question, Sent = DateTime.Now };
+            order.Details.Add(question.Message);
         }
         public static void Reply(string reply, ref Order order)
         {
-            var newReply = new OrderResponse() { Message = reply, Sent = DateTime.Now };
+            var seconds = (long)DateTime.UtcNow.Subtract(DateTime.MinValue.AddYears(1969)).TotalMilliseconds;
+            var newReply = new OrderMessage() { Message = reply, Sent = DateTime.Now, Sender = order.Customer.FirstName, SentSeconds = seconds };
             order.Details.Add(newReply);
+            
         }
 
         public static string Serialize(Order order)
@@ -27,7 +29,7 @@ namespace Rodzilla.Mobile.Orders.Models
 
         public static Order NewOrder(Customer customer)
         {
-            return new Order(){CustomerFirstName = customer.FirstName, CustomerId = customer.Id, CustomerStripeId = customer.StripeId};
+            return new Order() { Customer = customer };
         }
 
         public static void EstimateOrder(long price, int minutesToFulfill, ref Order order)

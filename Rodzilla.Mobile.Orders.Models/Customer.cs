@@ -7,7 +7,6 @@ namespace Rodzilla.Mobile.Orders.Models
     {
         [JsonProperty("id")]
         public string Id { get; set; }
-        [JsonProperty("stripeId")]
         public string StripeId { get; set; }
         public string FirstName { get; set; }
         public string Email { get; set; }

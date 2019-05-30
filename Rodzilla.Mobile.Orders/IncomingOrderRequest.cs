@@ -13,10 +13,15 @@ namespace Rodzilla.Mobile.Orders
             ILogger log,
             [CosmosDB(
                 databaseName: "MobileOrders",
+                collectionName: "customers",Id = "{Customer.Id}", PartitionKey = "{Customer.StripeId}",ConnectionStringSetting = "DBConnection")] Customer customer,
+            [CosmosDB(
+                databaseName: "MobileOrders",
                 collectionName: "orders", ConnectionStringSetting = "DBConnection")]out Order newOrder,
             [SignalR(HubName = "orders")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             newOrder = incomingOrderRequest;
+            //let's give this order the full customer info as it was at the time of ordering
+            newOrder.Customer = customer;
 
             return signalRMessages.AddAsync(
                 new SignalRMessage

@@ -1,5 +1,5 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace Rodzilla.Mobile.Orders.Models
 {
@@ -8,6 +8,8 @@ namespace Rodzilla.Mobile.Orders.Models
     {
         public string Message { get; set; }
         public DateTime Sent { get; set; }
+        public string Sender { get; set; }
+        public long SentSeconds { get; set; }
 
         public OrderMessage()
         {
@@ -17,9 +19,9 @@ namespace Rodzilla.Mobile.Orders.Models
 
 
 
-    [JsonObject(Title = "OrderQuestion")]
-    public class OrderQuestion : OrderMessage { }
-    [JsonObject(Title = "OrderResponse")]
-    public class OrderResponse : OrderMessage { }
+    //[JsonObject(Title = "OrderQuestion")]
+    //public class OrderQuestion : OrderMessage { }
+    //[JsonObject(Title = "OrderResponse")]
+    //public class OrderResponse : OrderMessage { }
 
 }

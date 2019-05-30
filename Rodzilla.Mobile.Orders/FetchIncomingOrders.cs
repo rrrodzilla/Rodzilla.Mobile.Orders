@@ -15,19 +15,19 @@ using Rodzilla.Mobile.Orders.Models;
 
 namespace Rodzilla.Mobile.Orders
 {
-    public static class FetchActiveOrders
+    public static class FetchIncomingOrders
     {
-        [FunctionName("FetchActiveOrders")]
+        [FunctionName("FetchIncomingOrders")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log,
-            [CosmosDB(databaseName:"MobileOrders",collectionName:"orders", ConnectionStringSetting="DBConnection")]DocumentClient client)
+            [CosmosDB(databaseName: "MobileOrders", collectionName: "orders", ConnectionStringSetting = "DBConnection")]DocumentClient client)
         {
             var collectionUri = UriFactory.CreateDocumentCollectionUri("MobileOrders", "orders");
 
 
-            var query = client.CreateDocumentQuery<Order>(collectionUri, feedOptions:new FeedOptions(){EnableCrossPartitionQuery = true})
-                .Where(p => (p.OrderStatus == "ready-for-fulfillment") || (p.OrderStatus == "order-started"))
+            var query = client.CreateDocumentQuery<Order>(collectionUri, feedOptions: new FeedOptions() { EnableCrossPartitionQuery = true })
+                .Where(p => (p.OrderStatus == "requested" || p.OrderStatus == "estimated" || p.OrderStatus == "awaiting-response"))
                 .AsDocumentQuery();
 
             var orders = new Collection<Order>();
@@ -40,7 +40,7 @@ namespace Rodzilla.Mobile.Orders
                     orders.Add(result);
                 }
             }
-            return new JsonResult(orders, new JsonSerializerSettings(){Formatting = Formatting.Indented});
+            return new JsonResult(orders, new JsonSerializerSettings() { Formatting = Formatting.Indented });
         }
     }
 }
